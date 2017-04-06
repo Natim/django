@@ -163,6 +163,20 @@ This lets you construct choices dynamically. But if you find yourself hacking
 database table with a :class:`ForeignKey`. :attr:`~Field.choices` is meant for
 static data that doesn't change much, if ever.
 
+To use a dynamic iterable object you create a deconstructible class with
+``unroll_in_migrations = False`` flag to explicitly write the object on the
+migration file and not the unrolled resulting list::
+
+    from django.utils.deconstruct import deconstructible
+    @deconstructible
+    class MyIterable:
+        unroll_in_migrations = False
+
+        def __iter__(self):
+            for i in range(10):
+                yield (i, str(i * i))
+
+
 Unless :attr:`blank=False<Field.blank>` is set on the field along with a
 :attr:`~Field.default` then a label containing ``"---------"`` will be rendered
 with the select box. To override this behavior, add a tuple to ``choices``
