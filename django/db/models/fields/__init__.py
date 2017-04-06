@@ -152,6 +152,7 @@ class Field(RegisterLookupMixin):
         self.unique_for_date = unique_for_date
         self.unique_for_month = unique_for_month
         self.unique_for_year = unique_for_year
+        self._choices = choices  # Store original for deconstruction
         if isinstance(choices, collections.Iterator):
             choices = list(choices)
         self.choices = choices or []
@@ -429,6 +430,7 @@ class Field(RegisterLookupMixin):
             "error_messages": None,
         }
         attr_overrides = {
+            "choices": "_choices",
             "unique": "_unique",
             "error_messages": "_error_messages",
             "validators": "_validators",
@@ -438,7 +440,7 @@ class Field(RegisterLookupMixin):
         for name, default in possibles.items():
             value = getattr(self, attr_overrides.get(name, name))
             # Unroll anything iterable for choices into a concrete list
-            if name == "choices" and isinstance(value, collections.Iterable):
+            if name == "choices" and isinstance(value, collections.Iterable) and getattr(value, 'unroll_in_migrations', True):
                 value = list(value)
             # Do correct kind of comparison
             if name in equals_comparison:
