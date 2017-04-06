@@ -46,6 +46,13 @@ class TestModel1(object):
     thing = models.FileField(upload_to=upload_to)
 
 
+@deconstructible
+class ImportableIterable:
+    def __iter__(self):
+        for i in [('a', 'A'), ('b', 'B')]:
+            yield i
+
+
 class OperationWriterTests(SimpleTestCase):
 
     def test_empty_signature(self):
@@ -491,6 +498,33 @@ class WriterTests(SimpleTestCase):
 
         with self.assertRaisesMessage(ValueError, 'Could not find function upload_to in migrations.test_writer'):
             self.serialize_round_trip(TestModel2.thing)
+
+    def test_serialize_choices_iterator_should_unroll(self):
+        """An iterable marked to unroll should be converted to a list by
+        default."""
+        choices = [('a', 'A'), ('b', 'B')]
+
+        iter_choices = ImportableIterable()
+        iter_choices.unroll_in_migrations = True
+
+        class TestModel3:
+            thing = models.CharField(choices=iter_choices)
+
+        new_value = self.serialize_round_trip(TestModel3.thing)
+        self.assertEqual(new_value.choices, new_value._choices)
+        self.assertEqual(new_value.choices, choices)
+
+    def test_serialize_choices_iterator_should_not_unroll(self):
+        """An iterable explicitely marked not to unroll should not be
+        converted to a list."""
+        iter_choices = ImportableIterable()
+        iter_choices.unroll_in_migrations = False
+
+        class TestModel3:
+            thing = models.CharField(choices=iter_choices)
+
+        new_value = self.serialize_round_trip(TestModel3.thing)
+        self.assertTrue(isinstance(new_value.choices, ImportableIterable))
 
     def test_serialize_managers(self):
         self.assertSerializedEqual(models.Manager())
