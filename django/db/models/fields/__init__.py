@@ -152,7 +152,7 @@ class Field(RegisterLookupMixin):
         self.unique_for_date = unique_for_date
         self.unique_for_month = unique_for_month
         self.unique_for_year = unique_for_year
-        self._choices = choices  # Store original for deconstruction
+        self._choices = choices or []  # Store original for deconstruction
         if isinstance(choices, collections.Iterator):
             choices = list(choices)
         self.choices = choices or []
