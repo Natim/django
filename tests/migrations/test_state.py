@@ -920,32 +920,6 @@ class StateTests(SimpleTestCase):
         choices_field = Author._meta.get_field('choice')
         self.assertEqual(list(choices_field.choices), choices)
 
-    def test_choices_unroll_iterator(self):
-        """
-        #28033 - Handle case where choices is an Iterator.
-        Field.choices iterators that we don't wnat to unroll in migrations.
-        """
-        new_apps = Apps(["migrations"])
-
-        class MyIterable:
-            def __iter__(self):
-                for i in [('a', 'A'), ('b', 'B')]:
-                    yield i
-
-        iter_choices = MyIterable()
-
-        class Author(models.Model):
-            name = models.CharField(max_length=255)
-            choice = models.CharField(max_length=255, choices=iter_choices)
-
-            class Meta:
-                app_label = "migrations"
-                apps = new_apps
-
-        ProjectState.from_apps(new_apps)
-        choices_field = Author._meta.get_field('choice')
-        self.assertEqual(choices_field.choices, iter_choices)
-
 
 class ModelStateTests(SimpleTestCase):
     def test_custom_model_base(self):
